@@ -7,13 +7,14 @@ import torch
 import torch.backends.cudnn as cudnn
 from networks.vit_seg_modeling import VisionTransformer as ViT_seg
 from networks.vit_seg_modeling import CONFIGS as CONFIGS_ViT_seg
-from trainer import trainer_synapse
+from trainer import trainer_synapse, trainer_acdc
+from datasets.dataset_acdc import BaseDataSets
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--root_path', type=str,
                     default='./data/Synapse/train_npz', help='root dir for data')
 parser.add_argument('--dataset', type=str,
-                    default='Synapse', help='experiment_name')
+                    default='ACDC', help='experiment_name')
 parser.add_argument('--list_dir', type=str,
                     default='./lists/lists_Synapse', help='list dir')
 parser.add_argument('--num_classes', type=int,
@@ -56,6 +57,12 @@ if __name__ == "__main__":
     torch.cuda.manual_seed(args.seed)
     dataset_name = args.dataset
     dataset_config = {
+        'ACDC': {
+            'Dataset': BaseDataSets,  # datasets.dataset_acdc.BaseDataSets,
+            'root_path': './data/ACDC',
+            'list_dir': None,
+            'num_classes': 4,
+        },
         'Synapse': {
             'root_path': './data/Synapse/train_npz',
             'list_dir': './lists/lists_Synapse',
@@ -89,5 +96,5 @@ if __name__ == "__main__":
     net = ViT_seg(config_vit, img_size=args.img_size, num_classes=config_vit.n_classes).cuda()
     net.load_from(weights=np.load(config_vit.pretrained_path))
 
-    trainer = {'Synapse': trainer_synapse,}
+    trainer = {'Synapse': trainer_synapse, 'ACDC': trainer_acdc}
     trainer[dataset_name](args, net, snapshot_path)
